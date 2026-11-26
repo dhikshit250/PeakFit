@@ -63,7 +63,7 @@
 - [ ] Local PostgreSQL / Docker connection doc
 - [ ] Clerk middleware + sign-in/up routes
 - [ ] Env validation module (Zod env schema)
-- [ ] Cloudinary server helper
+- [x] ImageKit server helper (`src/lib/integrations/imagekit/client.ts`)
 - [ ] OpenRouter client module (no default model hardcoded in code — require env)
 - [ ] `GET /api/v1/health`
 - [ ] Render `render.yaml` or documented build/start commands

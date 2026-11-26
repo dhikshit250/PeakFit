@@ -39,7 +39,7 @@ Track milestone completion here. Updated after each milestone.
 **Completed:** 2026-11-26
 
 **Owner decisions captured:**
-- Stack: Next.js, TypeScript, Tailwind, shadcn, Prisma, Clerk, OpenRouter, Cloudinary, Render, Expo (Phase 2).
+- Stack: Next.js, TypeScript, Tailwind, shadcn, Prisma, Clerk, OpenRouter, ImageKit, Render (deploy postponed), Expo (Phase 2).
 - Repo layout: **Recommended `web/`** alongside legacy.
 - Data: **Full migration** from legacy PostgreSQL.
 - Scope: Individual users only (no trainers).
@@ -67,7 +67,8 @@ Track milestone completion here. Updated after each milestone.
 - Prisma 6.19 schema (full V2 domain model) + SQL migration file `20251126000000_init` (not applied to any DB)
 - Clerk: middleware, sign-in/up routes, protected `/dashboard`, server `auth()` header
 - Env validation (`src/lib/env.ts`) — OpenRouter models **env-only**, no hardcoded IDs
-- OpenRouter + Cloudinary server clients (config guards, no credentials in code)
+- OpenRouter + ImageKit server clients (config guards, no credentials in code)
+- Env: Clerk, Aiven PostgreSQL, and ImageKit configured locally; OpenRouter key present, models TBD; Render deploy postponed
 - `GET /api/v1/health` — public health + integration status
 - API helpers (`jsonSuccess`, `jsonError`, `requireUserId`)
 - Dark + gold theme baseline, landing + dashboard shell

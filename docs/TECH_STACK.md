@@ -18,7 +18,7 @@
 | ORM | **Prisma** | Schema, migrations, queries |
 | Auth | **Clerk** | Identity, sessions, social login |
 | AI | **OpenRouter** | Workout/diet generation (server-only) |
-| Media | **Cloudinary** | Profile and progress photos |
+| Media | **ImageKit** | Profile and progress photos |
 | Charts | **Recharts** or **Chart.js** (via react wrapper) | Progress visualizations |
 | Testing | **Vitest** + **Playwright** (or CRA-equivalent) | Unit/API + critical E2E |
 | Hosting | **Render** (single web service) | Production |
@@ -76,12 +76,13 @@ Never commit values. Use Render dashboard + local `.env.local` (gitignored).
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Yes | Clerk client |
 | `CLERK_SECRET_KEY` | Yes | Clerk server |
 | `CLERK_WEBHOOK_SECRET` | Recommended | User sync / delete webhooks |
-| `OPENROUTER_API_KEY` | Yes | Server-only AI |
-| `OPENROUTER_MODEL` | Yes | Primary model ID (no hardcoded default in code without env fallback doc) |
+| `OPENROUTER_API_KEY` | For AI features | Server-only AI |
+| `OPENROUTER_MODEL` | For AI features | Primary model ID from OpenRouter |
 | `OPENROUTER_MODEL_FALLBACK` | Optional | Fallback model ID |
-| `CLOUDINARY_CLOUD_NAME` | Yes | Media |
-| `CLOUDINARY_API_KEY` | Yes | Media |
-| `CLOUDINARY_API_SECRET` | Yes | Media |
+| `IMAGEKIT_PUBLIC_KEY` | For media features | ImageKit server/client uploads |
+| `IMAGEKIT_PRIVATE_KEY` | For media features | ImageKit server uploads |
+| `IMAGEKIT_URL_ENDPOINT` | For media features | CDN base URL (`https://ik.imagekit.io/...`) |
+| `NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT` | Optional | Expose URL endpoint to client uploads |
 | `NEXT_PUBLIC_APP_URL` | Yes | Canonical URL (Render) |
 | `LEGACY_DATABASE_URL` | Migration only | Read-only old Postgres export source |
 

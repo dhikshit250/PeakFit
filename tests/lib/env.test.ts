@@ -1,9 +1,10 @@
 import { afterEach, describe, expect, it } from "vitest";
 import {
   getServerEnv,
-  isCloudinaryConfigured,
   isDatabaseConfigured,
+  isImageKitConfigured,
   isOpenRouterConfigured,
+  isOpenRouterKeyConfigured,
   resetEnvCacheForTests,
 } from "@/lib/env";
 
@@ -17,16 +18,38 @@ describe("env", () => {
     expect(env.NODE_ENV).toBeDefined();
   });
 
-  it("detects OpenRouter only when key and model are set", () => {
-    const before = isOpenRouterConfigured(getServerEnv());
-    expect(before).toBe(false);
+  it("treats empty optional env strings as unset", () => {
+    process.env.OPENROUTER_MODEL = "";
+    process.env.CLERK_WEBHOOK_SECRET = "";
+    resetEnvCacheForTests();
+    const env = getServerEnv();
+    expect(env.OPENROUTER_MODEL).toBeUndefined();
+    expect(env.CLERK_WEBHOOK_SECRET).toBeUndefined();
+    delete process.env.OPENROUTER_MODEL;
+    delete process.env.CLERK_WEBHOOK_SECRET;
+  });
+
+  it("detects OpenRouter model config when key and model are set", () => {
+    delete process.env.OPENROUTER_API_KEY;
+    delete process.env.OPENROUTER_MODEL;
+    resetEnvCacheForTests();
+    expect(isOpenRouterConfigured(getServerEnv())).toBe(false);
 
     process.env.OPENROUTER_API_KEY = "test-key";
     process.env.OPENROUTER_MODEL = "provider/model";
     resetEnvCacheForTests();
     expect(isOpenRouterConfigured(getServerEnv())).toBe(true);
+    expect(isOpenRouterKeyConfigured(getServerEnv())).toBe(true);
     delete process.env.OPENROUTER_API_KEY;
     delete process.env.OPENROUTER_MODEL;
+  });
+
+  it("detects OpenRouter key without model", () => {
+    process.env.OPENROUTER_API_KEY = "test-key";
+    resetEnvCacheForTests();
+    expect(isOpenRouterKeyConfigured(getServerEnv())).toBe(true);
+    expect(isOpenRouterConfigured(getServerEnv())).toBe(false);
+    delete process.env.OPENROUTER_API_KEY;
   });
 
   it("detects database configuration from DATABASE_URL", () => {
@@ -40,18 +63,21 @@ describe("env", () => {
     delete process.env.DATABASE_URL;
   });
 
-  it("detects Cloudinary when all three vars are set", () => {
+  it("detects ImageKit when all three vars are set", () => {
+    delete process.env.IMAGEKIT_PUBLIC_KEY;
+    delete process.env.IMAGEKIT_PRIVATE_KEY;
+    delete process.env.IMAGEKIT_URL_ENDPOINT;
     resetEnvCacheForTests();
-    expect(isCloudinaryConfigured(getServerEnv())).toBe(false);
+    expect(isImageKitConfigured(getServerEnv())).toBe(false);
 
-    process.env.CLOUDINARY_CLOUD_NAME = "demo";
-    process.env.CLOUDINARY_API_KEY = "key";
-    process.env.CLOUDINARY_API_SECRET = "secret";
+    process.env.IMAGEKIT_PUBLIC_KEY = "public";
+    process.env.IMAGEKIT_PRIVATE_KEY = "private";
+    process.env.IMAGEKIT_URL_ENDPOINT = "https://ik.imagekit.io/demo";
     resetEnvCacheForTests();
-    expect(isCloudinaryConfigured(getServerEnv())).toBe(true);
+    expect(isImageKitConfigured(getServerEnv())).toBe(true);
 
-    delete process.env.CLOUDINARY_CLOUD_NAME;
-    delete process.env.CLOUDINARY_API_KEY;
-    delete process.env.CLOUDINARY_API_SECRET;
+    delete process.env.IMAGEKIT_PUBLIC_KEY;
+    delete process.env.IMAGEKIT_PRIVATE_KEY;
+    delete process.env.IMAGEKIT_URL_ENDPOINT;
   });
 });

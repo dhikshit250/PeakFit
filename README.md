@@ -13,7 +13,7 @@ PeakFit is an individual fitness and nutrition platform: personalized workouts a
 - User authentication and protected routes (**Clerk**)
 - Profile, workout and diet preferences
 - AI-assisted plan generation (**OpenRouter**, server-side only)
-- Profile and progress media (**Cloudinary**)
+- Profile and progress media (**ImageKit**)
 - Comprehensive progress tracking (weight, workouts, nutrition, goals, photos)
 - Versioned REST APIs under `/api/v1` for web and future mobile clients
 
@@ -37,7 +37,7 @@ PeakFit is an individual fitness and nutrition platform: personalized workouts a
 | ORM | **Prisma** 6 |
 | Validation | **Zod** |
 | AI | **OpenRouter** (env-configured models) |
-| Media | **Cloudinary** |
+| Media | **ImageKit** |
 | Tests | **Vitest** |
 | Hosting | **Render** (single web service; [`render.yaml`](render.yaml)) |
 
@@ -100,6 +100,8 @@ Open [http://localhost:3000](http://localhost:3000). Sign-in routes: `/sign-in`,
 
 ```bash
 npm test
+npm run test:integration   # requires DATABASE_URL
+npm run test:e2e           # requires dev server on :3000
 npm run lint
 npm run build   # needs Clerk keys + DATABASE_URL for a full production build
 ```
@@ -115,7 +117,7 @@ Secrets live in `.env.local` (local) or the **Render** service environment (prod
 | Service | Purpose | Suggested plan | Where to get credentials | Environment variables |
 |---------|---------|----------------|--------------------------|------------------------|
 | **[Clerk](https://dashboard.clerk.com)** | Auth, sessions, protected routes | Free tier for dev; Free or Pro for production | Clerk Dashboard → your application → **API Keys** | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY` |
-| **PostgreSQL** | App data (Prisma) | Free dev DB (Render Postgres, Neon, Supabase, or local Docker) | Your provider’s connection string UI | `DATABASE_URL` |
+| **PostgreSQL** | App data (Prisma) | Free dev DB (e.g. **Aiven**, Render Postgres, Neon, Supabase, or local Docker) | Your provider’s connection string UI (use `?sslmode=require` for Aiven) | `DATABASE_URL` |
 
 Also set:
 
@@ -125,21 +127,18 @@ Also set:
 
 Clerk handles sign-in emails; this repo does **not** integrate a separate transactional email provider.
 
-### Required for production deploy
+### Production deploy (optional — postponed)
 
-| Service | Purpose | Suggested plan | Where | Notes |
-|---------|---------|----------------|-------|-------|
-| **[Render](https://render.com)** | Host Next.js (`npm run build` / `start`) | Free or Starter web service | New **Web Service**, repo root, branch `peakfit-v2` | Copy all env vars from `.env.example` into the service |
-| **Render PostgreSQL** (recommended) | Same-vendor database | Free (time-limited) or paid | Render → **PostgreSQL** → connection string | Use as `DATABASE_URL` on the web service |
+When you are ready to deploy, **[Render](https://render.com)** is the documented target ([`render.yaml`](render.yaml)): web service + env vars from `.env.example`. PostgreSQL can stay on **Aiven** or move to Render Postgres—only `DATABASE_URL` must match your chosen host.
 
 ### Optional until Milestone 3+ (feature-gated in code)
 
 | Service | Purpose | Suggested plan | Where to get credentials | Environment variables |
 |---------|---------|----------------|--------------------------|------------------------|
-| **[OpenRouter](https://openrouter.ai)** | AI workout/diet generation | Pay-as-you-go; free models if you choose them | API Keys + model list | `OPENROUTER_API_KEY`, `OPENROUTER_MODEL`; optional `OPENROUTER_MODEL_FALLBACK`, `OPENROUTER_SITE_URL`, `OPENROUTER_APP_NAME` |
-| **[Cloudinary](https://cloudinary.com)** | Image uploads | Free tier for dev | Dashboard → **API Keys** | `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` |
+| **[OpenRouter](https://openrouter.ai)** | AI workout/diet generation | Pay-as-you-go; free models if you choose them | API Keys + [model IDs](https://openrouter.ai/models) | `OPENROUTER_API_KEY`, `OPENROUTER_MODEL`; optional `OPENROUTER_MODEL_FALLBACK`, `OPENROUTER_SITE_URL`, `OPENROUTER_APP_NAME` |
+| **[ImageKit](https://imagekit.io)** | Image uploads (server + client direct upload) | Free tier for dev | Dashboard → **Developer Options** → API keys | `IMAGEKIT_PUBLIC_KEY`, `IMAGEKIT_PRIVATE_KEY`, `IMAGEKIT_URL_ENDPOINT`; optional `NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT` |
 
-Until OpenRouter and Cloudinary are set, `/api/v1/health` reports **degraded** for those checks—expected before Milestone 3.
+`/api/v1/health` reports overall **ok** when **Clerk** and **database** are ready. OpenRouter and ImageKit appear as separate checks (`configured` / `keyPresent`) and can be false until Milestone 3— that does **not** mark the app degraded.
 
 ### Optional / later
 
@@ -210,7 +209,7 @@ Schema and models: [`docs/DATABASE_DOCUMENTATION.md`](docs/DATABASE_DOCUMENTATIO
 3. Set environment variables (Clerk, `DATABASE_URL`, `NEXT_PUBLIC_APP_URL`, and Milestone 3+ keys as needed).
 4. Deploy when ready (you control Git push; this README does not trigger deploys).
 
-**Simplest setup:** Render Web Service + Render Postgres + Clerk + env vars above; add OpenRouter and Cloudinary when Milestone 3 ships.
+**Simplest production setup (when you deploy):** Render Web Service + `DATABASE_URL` (Aiven or Render Postgres) + Clerk + ImageKit; set `OPENROUTER_MODEL` when AI features ship in Milestone 3.
 
 ---
 
@@ -221,8 +220,8 @@ Schema and models: [`docs/DATABASE_DOCUMENTATION.md`](docs/DATABASE_DOCUMENTATIO
 | 0 — Audit | Done |
 | 1 — Planning & documentation | Done |
 | 2 — Foundation (Next.js, Clerk, Prisma schema, health API) | Done |
-| 3 — Core functionality (profile, prefs, AI) | **Not started** |
-| 4 — Full progress tracking | Not started |
+| 3 — Core functionality (profile, prefs, AI) | **In progress** (see `docs/IMPLEMENTATION_STATUS.md`) |
+| 4 — Full progress tracking | **In progress** |
 | 5 — UI/UX polish | Not started |
 | 6 — Testing & hardening | Not started |
 | 7 — Production readiness | Not started |

@@ -45,6 +45,13 @@ enum CalorieEntryType {
   EXPENDITURE
 }
 
+enum MealSlot {
+  BREAKFAST
+  LUNCH
+  DINNER
+  SNACK
+}
+
 enum GoalMetricType {
   WEIGHT
   BODY_FAT
@@ -91,6 +98,7 @@ model User {
   progressPhotos     ProgressPhoto[]
   fitnessGoals       FitnessGoal[]
   generatedPlans     GeneratedPlan[]
+  plannedMeals       PlannedMeal[]
 }
 
 model UserProfile {
@@ -138,9 +146,10 @@ model DietPreferences {
   allergies         String?
   mealFrequency     String   @default("3 meals/day")
   cheatMealsPerWeek Int?
-  calorieTarget     Int?
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  calorieTarget       Int?
+  preferIndianCuisine Boolean  @default(false)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
 }
 
 model WorkoutSession {
@@ -270,10 +279,31 @@ model CalorieEntry {
   type        CalorieEntryType
   calories    Int
   description String?
+  proteinG    Int?
+  carbsG      Int?
+  fatG        Int?
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
 
   @@index([userId, recordedAt(sort: Desc)])
+}
+
+model PlannedMeal {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plannedDate DateTime @db.Date
+  mealSlot    MealSlot
+  title       String
+  description String?
+  calories    Int
+  proteinG    Int?
+  carbsG      Int?
+  fatG        Int?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId, plannedDate(sort: Desc)])
 }
 
 model ActivityDay {

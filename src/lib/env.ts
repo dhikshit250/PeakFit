@@ -7,6 +7,7 @@ import { z } from "zod";
 const clientEnvSchema = z.object({
   NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: z.string().min(1).optional(),
   NEXT_PUBLIC_APP_URL: z.string().url().optional(),
+  NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT: z.string().url().optional(),
 });
 
 /**
@@ -26,9 +27,9 @@ const serverEnvSchema = z.object({
   OPENROUTER_SITE_URL: z.string().url().optional(),
   OPENROUTER_APP_NAME: z.string().min(1).optional(),
 
-  CLOUDINARY_CLOUD_NAME: z.string().min(1).optional(),
-  CLOUDINARY_API_KEY: z.string().min(1).optional(),
-  CLOUDINARY_API_SECRET: z.string().min(1).optional(),
+  IMAGEKIT_PUBLIC_KEY: z.string().min(1).optional(),
+  IMAGEKIT_PRIVATE_KEY: z.string().min(1).optional(),
+  IMAGEKIT_URL_ENDPOINT: z.string().url().optional(),
 });
 
 export type ClientEnv = z.infer<typeof clientEnvSchema>;
@@ -40,18 +41,29 @@ export function getClientEnv(): ClientEnv {
   return clientEnvSchema.parse({
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
+    NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT: process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT,
   });
 }
 
 /** Parse and cache server environment. Throws if required keys missing when `strict` is true. */
+/** Treat empty strings in `.env` as unset (common for optional keys). */
+function normalizeEnvRecord(record: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = { ...record };
+  for (const [key, value] of Object.entries(out)) {
+    if (value === "") out[key] = undefined;
+  }
+  return out;
+}
+
 export function getServerEnv(options?: { strict?: boolean }): ServerEnv {
   if (cachedServerEnv) return cachedServerEnv;
 
-  const merged = {
+  const merged = normalizeEnvRecord({
     ...process.env,
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
-  };
+    NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT: process.env.NEXT_PUBLIC_IMAGEKIT_URL_ENDPOINT,
+  });
 
   const parsed = serverEnvSchema.merge(clientEnvSchema).safeParse(merged);
 
@@ -87,13 +99,19 @@ export function assertServerEnvReady(env: ServerEnv): void {
   }
 }
 
+/** AI generation requires API key and a model ID. */
 export function isOpenRouterConfigured(env: ServerEnv = getServerEnv()): boolean {
   return Boolean(env.OPENROUTER_API_KEY && env.OPENROUTER_MODEL);
 }
 
-export function isCloudinaryConfigured(env: ServerEnv = getServerEnv()): boolean {
+/** OpenRouter account / key present (model may be unset until you choose one). */
+export function isOpenRouterKeyConfigured(env: ServerEnv = getServerEnv()): boolean {
+  return Boolean(env.OPENROUTER_API_KEY);
+}
+
+export function isImageKitConfigured(env: ServerEnv = getServerEnv()): boolean {
   return Boolean(
-    env.CLOUDINARY_CLOUD_NAME && env.CLOUDINARY_API_KEY && env.CLOUDINARY_API_SECRET,
+    env.IMAGEKIT_PUBLIC_KEY && env.IMAGEKIT_PRIVATE_KEY && env.IMAGEKIT_URL_ENDPOINT,
   );
 }
 

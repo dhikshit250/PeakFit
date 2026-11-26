@@ -23,7 +23,7 @@ flowchart TB
     Clerk[Clerk Auth]
     PG[(PostgreSQL)]
     OR[OpenRouter]
-    CDN[Cloudinary]
+    CDN[ImageKit]
   end
   Web --> Next
   Mobile -.-> API
@@ -95,7 +95,7 @@ User (Prisma)
 
 1. Clerk user deleted (app settings or Clerk dashboard flow).
 2. Webhook or API orchestration deletes cascaded Prisma data.
-3. Cloudinary assets removed or orphaned per policy (document in migration).
+3. ImageKit assets removed or orphaned per policy (document in migration).
 
 **Legacy migration:** Map `peakfit_users.id` → new `User.id` with `legacyUserId` column **temporary** for migration audit; store `clerkUserId` after Clerk import.
 
@@ -129,11 +129,11 @@ sequenceDiagram
 
 ---
 
-## 5. Media (Cloudinary)
+## 5. Media (ImageKit)
 
-- Upload via **signed** server route; client receives secure URL after auth check.
-- Progress photos: tagged by `userId` folder/prefix; metadata row in `ProgressPhoto`.
-- Use Next.js `Image` with Cloudinary URLs where applicable.
+- Upload via server buffer upload (`src/lib/integrations/imagekit/client.ts`) or **client direct upload** using `getAuthenticationParameters()`.
+- Progress photos: tagged by `userId` folder/prefix; metadata row in `ProgressPhoto` (Prisma field `cloudinaryPublicId` temporarily stores ImageKit `fileId` until a rename migration).
+- Use Next.js `Image` with ImageKit CDN URLs where applicable.
 
 ---
 

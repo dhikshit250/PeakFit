@@ -51,7 +51,9 @@
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| GET | `/health` | No | Liveness + DB connectivity |
+| GET | `/health` | No | Liveness; **200** when Clerk + DB OK, **503** when either is missing or DB unreachable |
+
+**Response `data.checks` (no secrets):** `database`, `clerk`, `openRouter` (`keyPresent`, `modelConfigured`), `imageKit`. Overall `status` is `degraded` only when Clerk is unset or the database is not connected—optional integrations do not force degraded.
 
 ---
 
@@ -180,7 +182,7 @@
 |--------|------|-------------|
 | GET | `/progress/photos` | List |
 | POST | `/progress/photos` | Create after upload (url + takenAt) |
-| DELETE | `/progress/photos/:id` | Remove record (+ optional Cloudinary delete) |
+| DELETE | `/progress/photos/:id` | Remove record (+ optional ImageKit delete) |
 
 ---
 
@@ -210,7 +212,7 @@
 | Method | Path | Description |
 |--------|------|-------------|
 | POST | `/media/upload` | Multipart or signed upload params |
-| POST | `/media/sign` | Optional: return Cloudinary signature for direct upload |
+| POST | `/media/sign` | Optional: return ImageKit authentication params for direct upload |
 
 All routes require auth.
 

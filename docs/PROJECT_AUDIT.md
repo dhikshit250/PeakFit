@@ -11,7 +11,7 @@
 
 PeakFit is an AI-assisted fitness web app: user accounts, profile, workout/diet **preferences**, and **Day 1** AI-generated workout + meal suggestions. Progress tracking, settings, and several APIs are **incomplete or broken**. The codebase is a **split stack**: Create React App frontend + Flask API + PostgreSQL (configured via env, not defined in repo).
 
-**PeakFit V2** replaces this with a **single Next.js (TypeScript) application** on Render, **Clerk**, **Prisma/PostgreSQL**, **OpenRouter**, and **Cloudinary**, plus full progress tracking. Pre-V2 source remains in **Git history** for migration reference (not in the V2 working tree).
+**PeakFit V2** replaces this with a **single Next.js (TypeScript) application** (Render when deployed), **Clerk**, **Prisma/PostgreSQL**, **OpenRouter**, and **ImageKit**, plus full progress tracking. Pre-V2 source remains in **Git history** for migration reference (not in the V2 working tree).
 
 ---
 

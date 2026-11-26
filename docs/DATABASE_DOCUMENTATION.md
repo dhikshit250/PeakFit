@@ -69,7 +69,7 @@ One-to-one with `User`.
 | `heightCm` | Decimal? | Canonical metric storage |
 | `weightKg` | Decimal? | **Current** snapshot; history in `WeightEntry` |
 | `goal` | Enum? | BULK, CUT, MAINTAIN, etc. |
-| `profileImageUrl` | String? | Cloudinary URL |
+| `profileImageUrl` | String? | ImageKit CDN URL |
 | `bio` | String? | Optional |
 
 ### 3.3 `WorkoutPreferences`
@@ -228,7 +228,7 @@ All support **update/delete by id** without affecting other rows.
 
 | Field | Type |
 |-------|------|
-| `userId`, `takenAt`, `imageUrl`, `caption?`, `cloudinaryPublicId?` |
+| `userId`, `takenAt`, `imageUrl`, `caption?`, `cloudinaryPublicId?` (ImageKit `fileId` until column rename) |
 
 ---
 

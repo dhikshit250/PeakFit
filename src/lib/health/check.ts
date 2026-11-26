@@ -1,4 +1,9 @@
-import { isCloudinaryConfigured, isDatabaseConfigured, isOpenRouterConfigured } from "@/lib/env";
+import {
+  isDatabaseConfigured,
+  isImageKitConfigured,
+  isOpenRouterConfigured,
+  isOpenRouterKeyConfigured,
+} from "@/lib/env";
 import { checkDatabaseConnection } from "@/lib/db";
 
 export type HealthCheckResult = {
@@ -8,8 +13,13 @@ export type HealthCheckResult = {
   checks: {
     database: { configured: boolean; connected: boolean };
     clerk: { configured: boolean };
-    openRouter: { configured: boolean };
-    cloudinary: { configured: boolean };
+    openRouter: {
+      configured: boolean;
+      keyPresent: boolean;
+      modelConfigured: boolean;
+      fallbackConfigured: boolean;
+    };
+    imageKit: { configured: boolean };
   };
 };
 
@@ -23,11 +33,13 @@ export async function runHealthCheck(): Promise<HealthCheckResult> {
     process.env.CLERK_SECRET_KEY && process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
   );
 
-  const openRouterConfigured = isOpenRouterConfigured();
-  const cloudinaryConfigured = isCloudinaryConfigured();
+  const openRouterKeyPresent = isOpenRouterKeyConfigured();
+  const openRouterModelConfigured = isOpenRouterConfigured();
+  const fallbackConfigured = Boolean(process.env.OPENROUTER_MODEL_FALLBACK);
+  const imageKitConfigured = isImageKitConfigured();
 
-  const degraded =
-    !dbConnected || !clerkConfigured || !openRouterConfigured || !cloudinaryConfigured;
+  // Core localhost: Clerk + database. Media & AI are optional until Milestone 3 features ship.
+  const degraded = !dbConnected || !clerkConfigured;
 
   return {
     status: degraded ? "degraded" : "ok",
@@ -36,8 +48,13 @@ export async function runHealthCheck(): Promise<HealthCheckResult> {
     checks: {
       database: { configured: dbConfigured, connected: dbConnected },
       clerk: { configured: clerkConfigured },
-      openRouter: { configured: openRouterConfigured },
-      cloudinary: { configured: cloudinaryConfigured },
+      openRouter: {
+        configured: openRouterModelConfigured,
+        keyPresent: openRouterKeyPresent,
+        modelConfigured: openRouterModelConfigured,
+        fallbackConfigured,
+      },
+      imageKit: { configured: imageKitConfigured },
     },
   };
 }

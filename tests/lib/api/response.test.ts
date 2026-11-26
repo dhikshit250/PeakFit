@@ -1,3 +1,4 @@
+import { Decimal } from "@prisma/client/runtime/library";
 import { describe, expect, it } from "vitest";
 import { z } from "zod";
 import { jsonError, jsonFromZodError, jsonSuccess } from "@/lib/api/response";
@@ -8,6 +9,12 @@ describe("api response helpers", () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body).toEqual({ data: { ok: true } });
+  });
+
+  it("jsonSuccess serializes Prisma Decimal fields", async () => {
+    const res = jsonSuccess({ weightKg: new Decimal("75.5") });
+    const body = await res.json();
+    expect(body.data).toEqual({ weightKg: 75.5 });
   });
 
   it("jsonError returns structured error", async () => {

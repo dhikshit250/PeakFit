@@ -10,6 +10,6 @@ Planned modules (Milestone 3+):
 - `ai.service.ts` — prompts, OpenRouter orchestration, plan persistence
 - `progress/` — metrics, aggregates, chart buckets
 - `goals.service.ts` — goal progress calculations
-- `media.service.ts` — Cloudinary uploads
+- `media.service.ts` — ImageKit uploads
 
 Route handlers in `src/app/api/v1/**` should only: authenticate, validate (Zod), call services, format responses.

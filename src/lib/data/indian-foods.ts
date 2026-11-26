@@ -1,0 +1,17 @@
+export const INDIAN_FOODS_HINT = [
+  "Dal tadka",
+  "Rajma chawal",
+  "Paneer bhurji",
+  "Roti + sabzi",
+  "Idli sambhar",
+  "Masala dosa",
+  "Poha",
+  "Upma",
+  "Chicken curry + rice",
+  "Fish curry",
+  "Palak paneer",
+  "Chana masala",
+  "Biryani (moderate portion)",
+  "Greek yogurt + nuts",
+  "Sprouts chaat",
+];

@@ -15,6 +15,7 @@
 
 # Testing
 /coverage
+/e2e/.auth/
 
 # Environment
 .env*

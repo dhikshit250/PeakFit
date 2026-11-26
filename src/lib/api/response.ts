@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import type { ZodError } from "zod";
+import { serializeForClient } from "@/lib/serialization/prisma-decimal";
 
 export type ApiErrorCode =
   | "VALIDATION_ERROR"
@@ -26,7 +27,10 @@ export type ApiSuccessBody<T> = {
 };
 
 export function jsonSuccess<T>(data: T, init?: ResponseInit & { meta?: Record<string, unknown> }) {
-  const body: ApiSuccessBody<T> = { data, ...(init?.meta ? { meta: init.meta } : {}) };
+  const body: ApiSuccessBody<T> = {
+    data: serializeForClient(data),
+    ...(init?.meta ? { meta: init.meta } : {}),
+  };
   if (!init?.meta) {
     return NextResponse.json(body, init);
   }
