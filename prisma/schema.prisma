@@ -1,0 +1,360 @@
+// PeakFit V2 — Prisma schema (foundation)
+// Apply with: npx prisma migrate dev (local only, after DATABASE_URL is set)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UnitSystem {
+  METRIC
+  IMPERIAL
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+  UNSPECIFIED
+}
+
+enum FitnessGoalType {
+  BULK
+  CUT
+  MAINTAIN
+}
+
+enum WorkoutIntensity {
+  LIGHT
+  MODERATE
+  INTENSE
+}
+
+enum WorkoutSessionSource {
+  MANUAL
+  AI_PLAN
+  IMPORTED
+}
+
+enum CalorieEntryType {
+  INTAKE
+  EXPENDITURE
+}
+
+enum GoalMetricType {
+  WEIGHT
+  BODY_FAT
+  STEPS
+  CALORIES
+  CUSTOM
+}
+
+enum GoalStatus {
+  ACTIVE
+  COMPLETED
+  ABANDONED
+}
+
+enum PersonalRecordType {
+  MAX_WEIGHT
+  MAX_REPS
+  EST_1RM
+}
+
+model User {
+  id           String   @id @default(cuid())
+  clerkUserId  String   @unique
+  legacyUserId Int?     @unique
+  email        String?
+  timezone     String   @default("UTC")
+  unitSystem   UnitSystem @default(METRIC)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  profile            UserProfile?
+  workoutPreferences WorkoutPreferences?
+  dietPreferences    DietPreferences?
+  workoutSessions    WorkoutSession[]
+  personalRecords    PersonalRecord[]
+  personalRecordHistory PersonalRecordHistory[]
+  weightEntries      WeightEntry[]
+  bodyFatEntries     BodyFatEntry[]
+  bodyMeasurements   BodyMeasurement[]
+  calorieEntries     CalorieEntry[]
+  activityDays       ActivityDay[]
+  waterEntries       WaterEntry[]
+  sleepEntries       SleepEntry[]
+  progressPhotos     ProgressPhoto[]
+  fitnessGoals       FitnessGoal[]
+  generatedPlans     GeneratedPlan[]
+}
+
+model UserProfile {
+  id              String          @id @default(cuid())
+  userId          String          @unique
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fullName        String?
+  age             Int?
+  gender          Gender?
+  heightCm        Decimal?        @db.Decimal(6, 2)
+  weightKg        Decimal?        @db.Decimal(6, 2)
+  goal            FitnessGoalType?
+  profileImageUrl String?
+  bio             String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+}
+
+model WorkoutPreferences {
+  id                   String           @id @default(cuid())
+  userId               String           @unique
+  user                 User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workoutDays          Json             @default("[]")
+  restDays             Json             @default("[]")
+  intensity            WorkoutIntensity @default(MODERATE)
+  durationMinutes      Int              @default(45)
+  workoutType          String           @default("Strength Training")
+  muscleGroups         Json             @default("[]")
+  exercises            Json             @default("[]")
+  calorieBurnGoal      Int?
+  equipment            Json             @default("[]")
+  remindersEnabled     Boolean          @default(false)
+  progressiveOverload  Boolean          @default(false)
+  warmUpCoolDown       Boolean          @default(true)
+  createdAt            DateTime         @default(now())
+  updatedAt            DateTime         @updatedAt
+}
+
+model DietPreferences {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dietType          String   @default("Balanced")
+  carbPreference    String   @default("Moderate-carb")
+  allergies         String?
+  mealFrequency     String   @default("3 meals/day")
+  cheatMealsPerWeek Int?
+  calorieTarget     Int?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model WorkoutSession {
+  id        String               @id @default(cuid())
+  userId    String
+  user      User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  startedAt DateTime
+  endedAt   DateTime?
+  notes     String?
+  source    WorkoutSessionSource @default(MANUAL)
+  createdAt DateTime             @default(now())
+  updatedAt DateTime             @updatedAt
+
+  exerciseLogs ExerciseLog[]
+
+  @@index([userId, startedAt(sort: Desc)])
+}
+
+model ExerciseLog {
+  id            String         @id @default(cuid())
+  sessionId     String
+  session       WorkoutSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  exerciseName  String
+  orderIndex    Int            @default(0)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  sets SetLog[]
+
+  @@index([sessionId, orderIndex])
+}
+
+model SetLog {
+  id             String      @id @default(cuid())
+  exerciseLogId  String
+  exerciseLog    ExerciseLog @relation(fields: [exerciseLogId], references: [id], onDelete: Cascade)
+  setNumber      Int
+  reps           Int?
+  weightKg       Decimal?    @db.Decimal(8, 2)
+  durationSec    Int?
+  rpe            Decimal?    @db.Decimal(3, 1)
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@unique([exerciseLogId, setNumber])
+}
+
+model PersonalRecord {
+  id            String             @id @default(cuid())
+  userId        String
+  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exerciseName  String
+  recordType    PersonalRecordType
+  value         Decimal            @db.Decimal(10, 2)
+  unit          String
+  achievedAt    DateTime
+  setLogId      String?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  @@unique([userId, exerciseName, recordType])
+  @@index([userId, achievedAt(sort: Desc)])
+}
+
+model PersonalRecordHistory {
+  id            String             @id @default(cuid())
+  userId        String
+  user          User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exerciseName  String
+  recordType    PersonalRecordType
+  previousValue Decimal?           @db.Decimal(10, 2)
+  newValue      Decimal            @db.Decimal(10, 2)
+  unit          String
+  achievedAt    DateTime
+  createdAt     DateTime           @default(now())
+
+  @@index([userId, exerciseName, achievedAt(sort: Desc)])
+}
+
+model WeightEntry {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recordedAt  DateTime
+  weightKg    Decimal  @db.Decimal(6, 2)
+  note        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId, recordedAt(sort: Desc)])
+}
+
+model BodyFatEntry {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recordedAt      DateTime
+  bodyFatPercent  Decimal  @db.Decimal(5, 2)
+  note            String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId, recordedAt(sort: Desc)])
+}
+
+model BodyMeasurement {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recordedAt DateTime
+  chestCm    Decimal? @db.Decimal(6, 2)
+  waistCm    Decimal? @db.Decimal(6, 2)
+  armCm      Decimal? @db.Decimal(6, 2)
+  thighCm    Decimal? @db.Decimal(6, 2)
+  note       String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([userId, recordedAt(sort: Desc)])
+}
+
+model CalorieEntry {
+  id          String           @id @default(cuid())
+  userId      String
+  user        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recordedAt  DateTime
+  type        CalorieEntryType
+  calories    Int
+  description String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([userId, recordedAt(sort: Desc)])
+}
+
+model ActivityDay {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      DateTime @db.Date
+  steps     Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, date])
+  @@index([userId, date(sort: Desc)])
+}
+
+model WaterEntry {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recordedAt DateTime
+  amountMl   Int
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([userId, recordedAt(sort: Desc)])
+}
+
+model SleepEntry {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recordedAt      DateTime
+  durationMinutes Int
+  quality         Int?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId, recordedAt(sort: Desc)])
+}
+
+model ProgressPhoto {
+  id                   String   @id @default(cuid())
+  userId               String
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  takenAt              DateTime
+  imageUrl             String
+  caption              String?
+  cloudinaryPublicId   String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@index([userId, takenAt(sort: Desc)])
+}
+
+model FitnessGoal {
+  id           String         @id @default(cuid())
+  userId       String
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  metricType   GoalMetricType
+  targetValue  Decimal        @db.Decimal(12, 2)
+  currentValue Decimal?       @db.Decimal(12, 2)
+  unit         String
+  deadline     DateTime?
+  status       GoalStatus     @default(ACTIVE)
+  completedAt  DateTime?
+  title        String?
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@index([userId, status])
+}
+
+model GeneratedPlan {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  generatedAt DateTime @default(now())
+  model       String
+  planJson    Json
+  dayIndex    Int      @default(1)
+  planType    String   @default("daily")
+
+  @@index([userId, generatedAt(sort: Desc)])
+}

@@ -1,8 +1,0 @@
-Flask
-flask-cors
-psycopg2
-cloudinary
-python-dotenv
-werkzeug
-pyjwt
-flask_jwt_extended
